@@ -1,0 +1,108 @@
+url= "http://www.legaseriea.it/it"
+
+def makesoup(url):
+    page= requests.get(url).text
+    soup= BeautifulSoup(page, 'lxml')
+    
+    return soup
+
+# create a list of team's name
+team= ["atalanta", "bologna", "brescia", "cagliari", "fiorentina", "genoa", "verona", "inter", "juventus",
+       "lazio", "lecce", "milan", "napoli", "parma", "roma", "sampdoria", "sassuolo", "spal", "torino", "udinese"]
+
+def squadra(team):
+    # appending the path (team) to the url hostname
+    newurl= url + "/serie-a" + "/squadre" + "/" + str(team) + "/statistiche-giocatori"
+    soup= makesoup(newurl)
+        
+    stat_table= soup.find("table",{"class":"tabella tabella_swipe"})
+        
+    r= []
+    p= []
+    a= []
+    e= []
+    k= []
+    o= []
+    assist= []
+    tir= []
+    for tr in stat_table.findAll('tr')[1:]:
+        r.append(tr.findAll('td')[2]) # ruolo
+        p.append(tr.findAll('td')[3]) # presenze
+        a.append(tr.findAll('td')[6]) # ammonizioni
+        e.append(tr.findAll('td')[8]) # espulsioni
+        k.append(tr.findAll('td')[9])  # km percorsi
+        o.append(tr.findAll('td')[10]) # occasioni da gol
+        assist.append(tr.findAll('td')[11]) # assist totali
+        tir.append(tr.findAll('td')[12])  # tiri
+    
+
+    g= stat_table.findAll('span') # nome giocatore
+        
+    giocatore= []
+    giocatore= caratteristica(g, giocatore)
+
+    ruolo= []
+    ruolo= caratteristica(r, ruolo)
+
+    presenze= []
+    presenze= caratteristica(p, presenze)
+
+
+    ammonizioni= []
+    ammonizioni= caratteristica(a, ammonizioni)
+
+    espulsioni= []
+    espulsioni= caratteristica(e, espulsioni)
+
+    km= []
+    km= caratteristica(k, km)
+
+    occ_gol= []
+    occ_gol= caratteristica(o, occ_gol)
+
+    tot_assist= []
+    tot_assist= caratteristica(assist, tot_assist)
+
+    tiri= []
+    tiri= caratteristica(tir, tiri)
+        
+    giocatore= pd.DataFrame(giocatore)
+    giocatore.rename(columns={0:'GIOCATORE'}, inplace=True)
+
+    ruolo= pd.DataFrame(ruolo)
+    ruolo.rename(columns={0:'RUOLO'}, inplace=True)
+
+    presenze= pd.DataFrame(presenze)
+    presenze.rename(columns={0:'PRESENZE'}, inplace=True)
+
+    ammonizioni= pd.DataFrame(ammonizioni)
+    ammonizioni.rename(columns={0:'AMMONIZIONI'}, inplace=True)
+
+    espulsioni= pd.DataFrame(espulsioni)
+    espulsioni.rename(columns={0:'ESPULSIONI'}, inplace=True)
+
+    km= pd.DataFrame(km)
+    km.rename(columns={0:'KM'}, inplace=True)
+
+    occ_gol= pd.DataFrame(occ_gol)
+    occ_gol.rename(columns={0:'OCC_GOL'}, inplace=True)
+
+    tot_assist= pd.DataFrame(tot_assist)
+    tot_assist.rename(columns={0:'ASSIST'}, inplace=True)
+
+    tiri= pd.DataFrame(tiri)
+    tiri.rename(columns={0:'TIRI'}, inplace=True)
+    
+    stat_player= pd.concat([giocatore, ruolo, presenze, ammonizioni, espulsioni, km, occ_gol, tot_assist, tiri], axis=1)
+    
+    n_squadra= []
+    for player in stat_player['GIOCATORE']:
+            n_squadra.append(str(team))
+    
+    n_squadra= pd.DataFrame(n_squadra)
+    n_squadra.rename(columns={0:'SQUADRA'}, inplace=True)
+    
+    stat_player= pd.concat([stat_player, n_squadra], axis=1)
+        
+        
+    return stat_player
