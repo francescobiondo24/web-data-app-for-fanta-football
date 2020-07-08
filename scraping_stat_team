@@ -1,0 +1,103 @@
+# riporto solamente una parte di codice 
+# utilizzo beautifulsoup per effettuare lo scraping della pagina
+
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+
+url= "http://www.legaseriea.it/it/serie-a/statistiche-squadre" # url pagina statistiche di tutte le squadre
+
+page= requests.get(url).text
+soup= BeautifulSoup(page, 'lxml')
+
+# con il comando soup.prettify() posso andare a visualizzare il codice html della pagina
+
+# vado a riportare il codice per estrapolare la classifica gol delle squadre
+
+gol_table= soup.find("section", {"class":"tabella"})
+s= [] # squadra
+g= [] # gol
+m= []  # media gol
+for tr in gol_table.findAll("tr")[1:]:
+    s.append(tr.findAll("td")[2])
+    g.append(tr.findAll("td")[3])
+    m.append(tr.findAll("td")[4])
+    
+squadra= []
+goal= []
+media_goal= []
+
+squadra= caratteristica(s, squadra)
+goal= caratteristica(g, goal)
+media_goal= caratteristica(m, media_goal)
+
+squadra= pd.DataFrame(squadra)
+squadra.rename(columns={0:'SQUADRA'}, inplace=True)
+
+goal= pd.DataFrame(goal)
+goal.rename(columns={0:'GOAL'}, inplace=True)
+
+# classifica tiri
+tiri_table= soup.findAll("table")[1]
+s= [] # squadra
+tt= [] # tiri totali
+tp= []  # tiri in porta
+tf= [] # tiri fuori
+
+for tr in tiri_table.findAll("tr")[1:]:
+    s.append(tr.findAll("td")[2])
+    tt.append(tr.findAll("td")[3])
+    tp.append(tr.findAll("td")[4])
+    
+    
+squadra= []
+tiri_tot= []
+tiri_porta= []
+
+
+squadra= caratteristica(s, squadra)
+tiri_tot= caratteristica(tt, tiri_tot)
+tiri_porta= caratteristica(tp, tiri_porta)
+
+squadra= pd.DataFrame(squadra)
+squadra.rename(columns={0:'SQUADRA'}, inplace=True)
+
+tiri_tot= pd.DataFrame(tiri_tot)
+tiri_tot.rename(columns={0:'TIRI_TOT'}, inplace=True)
+
+tiri_porta= pd.DataFrame(tiri_porta)
+tiri_porta.rename(columns={0:'TIRI_PORTA'}, inplace=True)
+
+
+classifica_tiri= pd.concat([squadra, tiri_tot, tiri_porta], axis=1)
+media_goal= pd.DataFrame(media_goal)
+media_goal.rename(columns={0:'MEDIA GOL'}, inplace=True)
+
+classifica_gol= pd.concat([squadra, goal, media_goal], axis=1)
+
+# le successive parti sono uuali per estrapolare le varie statistiche su assist, cross, possesso palla, gol di testa
+
+# definisco la funzione caratteristica utilizzata nel codice
+# la seguente funzione estrapola il testo dalla lista che si ottiene dallo scraping 
+def caratteristica(lista1, lista2):
+    for player in lista1:
+        lista2.append(player.get_text())
+    
+    return lista2
+    
+# definisco la funzione che mi va ad unire le varie classifiche
+def unire(classifica_1, classifica_2):
+    stat1= pd.merge(classifica_1, classifica_2)
+    stat2= pd.concat([classifica_1, classifica_2], ignore_index=True)
+
+    for i in stat2['SQUADRA']:
+        for j in stat1['SQUADRA']:
+            if i == j:
+                riga= stat2[stat2['SQUADRA']==i].index.values
+                riga= list(riga)
+                stat2.drop(riga, inplace=True)
+            
+    final_classifica= pd.concat([stat2, stat1], ignore_index=True)
+    
+    return final_classifica
+
