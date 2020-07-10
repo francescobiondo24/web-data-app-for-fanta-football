@@ -14,3 +14,8 @@ Costruire una data app sulla Serie A tramite l'uso della libreria Streamlit.
 In questa repository si troveranno dataset riguardanti le statistiche sia dei giocatori
 che delle squadre che militano nel campionato italiano Serie A.
 Inoltre tramite utilizzo di algoritmi di machine learning si cercherà di predire le possibili migliori soluzioni per la stagione successiva.
+
+I vari dataset riguardanti le statistiche riguardano:
+- risultati delle varie partite con annessi moduli utilizzati dalle due squadre
+- statistiche generali squadre durante l'intero campionato
+- statistiche giocatori
